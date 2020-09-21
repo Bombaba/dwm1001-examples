@@ -160,20 +160,20 @@ uint16 ds_init_run(uint8 dest_address[2])
   if (!(status_reg & SYS_STATUS_RXFCG))
   {
     rx_error_reset();
-    return -1;
+    return 0;
   }
 
   uint32 frame_len = len_rxdata();
   if (frame_len != sizeof(rx_ack_msg))
   {
-    return -1;
+    return 0;
   }
 
   dwt_readrxdata(rx_buffer, frame_len, 0);
 
   if (memcmp(rx_buffer, rx_ack_msg, MSG_COMMON_LEN) != 0)
   {
-    return -1;
+    return 0;
   }
 
   // send Response message
@@ -186,20 +186,20 @@ uint16 ds_init_run(uint8 dest_address[2])
     if (!(status_reg & SYS_STATUS_RXFCG))
   {
     rx_error_reset();
-    return -1;
+    return 0;
   }
 
   frame_len = len_rxdata();
   if (frame_len != sizeof(rx_last_msg))
   {
-    return -1;
+    return 0;
   }
 
   dwt_readrxdata(rx_buffer, frame_len, 0);
 
   if (memcmp(rx_buffer, rx_last_msg, MSG_COMMON_LEN) != 0)
   {
-    return -1;
+    return 0;
   }
 
   double unit = 1.0 / (128 * 499.2 * 1e6);
@@ -238,14 +238,7 @@ void ss_initiator_task_function (void * pvParameter)
       }
     }
     uint16 ret = ds_init_run(dest_address);
-    if (ret > 0)
-    {
-      output_uart(((uint8*)&ret)[0], ((uint8*)&ret)[1]);
-    }
-    else
-    {
-      output_uart(0, 0);
-    }
+    output_uart(((uint8*)&ret)[0], ((uint8*)&ret)[1]);
     /* Delay a task for a given number of ticks */
     //vTaskDelay(RNG_DELAY_MS);
     /* Tasks must be implemented to never return... */

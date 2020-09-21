@@ -173,7 +173,7 @@ int main(void)
           
   /* Set expected response's delay and timeout. 
   * As this example only handles one incoming frame with always the same delay and timeout, those values can be set here once for all. */
-  dwt_setrxaftertxdelay(50);
+  dwt_setrxaftertxdelay(0);
   dwt_setrxtimeout(1000); // Maximum value timeout with DW1000 is 65ms  
 
   //-------------dw1000  ini------end---------------------------	

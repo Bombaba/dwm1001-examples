@@ -154,7 +154,7 @@ int main(void)
   //dwt_setpreambledetecttimeout(PRE_TIMEOUT);
 
   dwt_setrxtimeout(0);    // set to NO receive timeout for this simple example 
-  dwt_setrxaftertxdelay(50);  // in UWB microseconds
+  dwt_setrxaftertxdelay(0);  // in UWB microseconds
 
   //-------------dw1000  ini------end---------------------------	
 

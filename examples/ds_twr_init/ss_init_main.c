@@ -136,7 +136,7 @@ uint32 len_rxdata()
   return dwt_read32bitreg(RX_FINFO_ID) & RX_FINFO_RXFLEN_MASK;
 }
 
-int ds_init_run(uint8 dest_address[2])
+uint16 ds_init_run(uint8 dest_address[2])
 {
   tx_init_msg[MSG_TO_ADDRESS_IX_0] = dest_address[0];
   tx_init_msg[MSG_TO_ADDRESS_IX_1] = dest_address[1];
@@ -160,14 +160,12 @@ int ds_init_run(uint8 dest_address[2])
   if (!(status_reg & SYS_STATUS_RXFCG))
   {
     rx_error_reset();
-    output_uart(0, 0);
     return -1;
   }
 
   uint32 frame_len = len_rxdata();
   if (frame_len != sizeof(rx_ack_msg))
   {
-    output_uart(0, 0);
     return -1;
   }
 
@@ -175,7 +173,6 @@ int ds_init_run(uint8 dest_address[2])
 
   if (memcmp(rx_buffer, rx_ack_msg, MSG_COMMON_LEN) != 0)
   {
-    output_uart(0, 0);
     return -1;
   }
 
@@ -189,14 +186,12 @@ int ds_init_run(uint8 dest_address[2])
     if (!(status_reg & SYS_STATUS_RXFCG))
   {
     rx_error_reset();
-    output_uart(0, 0);
     return -1;
   }
 
   frame_len = len_rxdata();
   if (frame_len != sizeof(rx_last_msg))
   {
-    output_uart(0, 0);
     return -1;
   }
 
@@ -204,7 +199,6 @@ int ds_init_run(uint8 dest_address[2])
 
   if (memcmp(rx_buffer, rx_last_msg, MSG_COMMON_LEN) != 0)
   {
-    output_uart(0, 0);
     return -1;
   }
 
@@ -216,9 +210,7 @@ int ds_init_run(uint8 dest_address[2])
   double time = (Ra * Rt - Da * Dt) / (Ra + Da + Rt + Dt);
   double distance = time * SPEED_OF_LIGHT;
 
-  printf("LAST MESSAGE RECEIVED: %f\r\n", distance);
-
-  return 0;
+  return (uint16)(distance * 1000);
 }
 
 
@@ -245,7 +237,15 @@ void ss_initiator_task_function (void * pvParameter)
         ix++;
       }
     }
-    ds_init_run(dest_address);
+    uint16 ret = ds_init_run(dest_address);
+    if (ret > 0)
+    {
+      output_uart(((uint8*)&ret)[0], ((uint8*)&ret)[1]);
+    }
+    else
+    {
+      output_uart(0, 0);
+    }
     /* Delay a task for a given number of ticks */
     //vTaskDelay(RNG_DELAY_MS);
     /* Tasks must be implemented to never return... */

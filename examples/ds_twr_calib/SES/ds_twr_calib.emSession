@@ -19,18 +19,18 @@
   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ss_twr_init" radix="16" sizeText="" addressText=""/>
  </Memory4>
  <Project>
-  <ProjectSessionItem path="ds_twr_init"/>
-  <ProjectSessionItem path="ds_twr_init;ds_twr_init"/>
-  <ProjectSessionItem path="ds_twr_init;ds_twr_init;Application"/>
-  <ProjectSessionItem path="ds_twr_init;ds_twr_init;Board Definition"/>
-  <ProjectSessionItem path="ds_twr_init;ds_twr_init;Board Support"/>
-  <ProjectSessionItem path="ds_twr_init;ds_twr_init;Config"/>
-  <ProjectSessionItem path="ds_twr_init;ds_twr_init;Decadriver"/>
-  <ProjectSessionItem path="ds_twr_init;ds_twr_init;Freertos"/>
-  <ProjectSessionItem path="ds_twr_init;ds_twr_init;Internal Files"/>
-  <ProjectSessionItem path="ds_twr_init;ds_twr_init;nRF_Drivers"/>
-  <ProjectSessionItem path="ds_twr_init;ds_twr_init;nRF_Libraries"/>
-  <ProjectSessionItem path="ds_twr_init;ds_twr_init;Uart"/>
+  <ProjectSessionItem path="ds_twr_calib"/>
+  <ProjectSessionItem path="ds_twr_calib;ds_twr_calib"/>
+  <ProjectSessionItem path="ds_twr_calib;ds_twr_calib;Application"/>
+  <ProjectSessionItem path="ds_twr_calib;ds_twr_calib;Board Definition"/>
+  <ProjectSessionItem path="ds_twr_calib;ds_twr_calib;Board Support"/>
+  <ProjectSessionItem path="ds_twr_calib;ds_twr_calib;Config"/>
+  <ProjectSessionItem path="ds_twr_calib;ds_twr_calib;Decadriver"/>
+  <ProjectSessionItem path="ds_twr_calib;ds_twr_calib;Freertos"/>
+  <ProjectSessionItem path="ds_twr_calib;ds_twr_calib;Internal Files"/>
+  <ProjectSessionItem path="ds_twr_calib;ds_twr_calib;nRF_Drivers"/>
+  <ProjectSessionItem path="ds_twr_calib;ds_twr_calib;nRF_Libraries"/>
+  <ProjectSessionItem path="ds_twr_calib;ds_twr_calib;Uart"/>
  </Project>
  <Register1>
   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ss_twr_init" decimalNodes="" octalNodes="" unsignedNodes=""/>
@@ -63,8 +63,8 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="175" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../main.c" selected="0" top="158" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="70" y="242" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../ss_init_main.c" selected="1" top="221" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="175" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../main.c" selected="0" top="156" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="240" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../ss_init_main.c" selected="1" top="209" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="102" useTextEdit="1" openedFrom="D:/ikyhdst/decawave/dwm1001-examples/examples/ss_twr_init_customized/ss_init_main.c" useBinaryEdit="0" left="0" path="../../../nRF5_SDK_14.2.0/components/libraries/uart/retarget.c" selected="0" top="90" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="53" useTextEdit="1" openedFrom="D:/ikyhdst/decawave/dwm1001-examples/examples/ss_twr_init_customized/main.c" useBinaryEdit="0" left="0" path="../UART/UART.c" selected="0" top="20" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="202" useTextEdit="1" openedFrom="D:/ikyhdst/Git/dwm1001-examples/examples/ss_twr_init/main.c" useBinaryEdit="0" left="0" path="../../../nRF5_SDK_14.2.0/components/libraries/util/nordic_common.h" selected="0" top="180" codecName="Default"/>
@@ -85,5 +85,5 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="69" useTextEdit="1" openedFrom="D:/ikyhdst/decawave/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/uart/app_uart_fifo.c" useBinaryEdit="0" left="0" path="../../../nRF5_SDK_14.2.0/components/libraries/fifo/app_fifo.h" selected="0" top="48" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="11" useTextEdit="1" openedFrom="D:/ikyhdst/decawave/dwm1001-examples/examples/ss_twr_init_customized/main.c" useBinaryEdit="0" left="0" path="../UART/UART.h" selected="0" top="0" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="ds_twr_init" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="nrf52832_xxaa" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/WorkArea/Repositories/dwm1001-keil-examples/nRF5_SDK_14.2.0/components/toolchain" debugSearchPath="" autoConnectCapabilities="3711"/>
+ <ARMCrossStudioWindow activeProject="ds_twr_init" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="nrf52832_xxaa" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/WorkArea/Repositories/dwm1001-keil-examples/nRF5_SDK_14.2.0/components/toolchain" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>

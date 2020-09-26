@@ -15,8 +15,8 @@
 
 #define APP_NAME "DS TWR INIT v1.3"
 
-#define THIS_ADDRESS_0 0x89
-#define THIS_ADDRESS_1 0x12
+#define THIS_ADDRESS_0 0x12
+#define THIS_ADDRESS_1 0x35
 
 /* Speed of light in air, in metres per second. */
 //#define SPEED_OF_LIGHT 299702547
@@ -34,6 +34,11 @@ static uint8 tx_init_msg[] = {THIS_ADDRESS_0, THIS_ADDRESS_1, 0x00, 0x00, 'I', 0
 static uint8 rx_ack_msg[] =  {0x00, 0x00, THIS_ADDRESS_0, THIS_ADDRESS_1, 'A', 0, 0, 0};
 static uint8 tx_res_msg[] =  {THIS_ADDRESS_0, THIS_ADDRESS_1, 0x00, 0x00, 'R', 0, 0, 0};
 static uint8 rx_last_msg[] = {0x00, 0x00, THIS_ADDRESS_0, THIS_ADDRESS_1, 'L', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+static uint8 rx_init_msg[] = {0x00, 0x00, THIS_ADDRESS_0, THIS_ADDRESS_1, 'I', 0, 0, 0};
+static uint8 tx_ack_msg[] =  {THIS_ADDRESS_0, THIS_ADDRESS_1, 0x00, 0x00, 'A', 0, 0, 0};
+static uint8 rx_res_msg[] =  {0x00, 0x00, THIS_ADDRESS_0, THIS_ADDRESS_1, 'R', 0, 0, 0};
+static uint8 tx_last_msg[] = {THIS_ADDRESS_0, THIS_ADDRESS_1, 0x00, 0x00, 'L', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 static uint8 seq_no = 0;
 
@@ -217,6 +222,137 @@ float ds_init_run(uint8 dest_address[2])
   return (float)distance;
 }
 
+int ds_resp_run()
+{
+  // set to NO receive timeout 
+  dwt_setrxtimeout(0);
+  /* Activate reception immediately. */
+  dwt_rxenable(DWT_START_RX_IMMEDIATE);
+  /* Poll for reception of a frame or error/timeout. See NOTE 5 below. */
+  while (!((status_reg = dwt_read32bitreg(SYS_STATUS_ID)) & (SYS_STATUS_RXFCG | SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR)))
+  {};
+
+  dwt_setrxtimeout(1000);
+
+  if (!(status_reg & SYS_STATUS_RXFCG))
+  {
+    rx_error_reset();
+    return -1;
+  }
+
+  uint32 frame_len = len_rxdata();
+  if (frame_len != sizeof(rx_init_msg))
+  {
+    dwt_rxreset();
+    return -1;
+  }
+
+  dwt_readrxdata(rx_buffer, frame_len, 0);
+
+  if (rx_buffer[MSG_TO_ADDRESS_IX_0] != THIS_ADDRESS_0
+      || rx_buffer[MSG_TO_ADDRESS_IX_1] != THIS_ADDRESS_1
+      || rx_buffer[MSG_COMMON_FLAG_IX] != rx_init_msg[MSG_COMMON_FLAG_IX])
+  {
+    dwt_rxreset();
+    return -1;
+  }
+
+  uint32 rxtimestamp = dwt_readrxtimestamplo32();
+  
+  tx_ack_msg[MSG_TO_ADDRESS_IX_0] = rx_buffer[MSG_FROM_ADDRESS_IX_0];
+  tx_ack_msg[MSG_TO_ADDRESS_IX_1] = rx_buffer[MSG_FROM_ADDRESS_IX_1];
+  rx_res_msg[MSG_FROM_ADDRESS_IX_0] = rx_buffer[MSG_FROM_ADDRESS_IX_0];
+  rx_res_msg[MSG_FROM_ADDRESS_IX_1] = rx_buffer[MSG_FROM_ADDRESS_IX_1];
+  tx_last_msg[MSG_TO_ADDRESS_IX_0] = rx_buffer[MSG_FROM_ADDRESS_IX_0];
+  tx_last_msg[MSG_TO_ADDRESS_IX_1] = rx_buffer[MSG_FROM_ADDRESS_IX_1];
+
+  tx_ack_msg[MSG_COMMON_SEQ_IX] = rx_res_msg[MSG_COMMON_SEQ_IX] = tx_last_msg[MSG_COMMON_SEQ_IX] = rx_buffer[MSG_COMMON_SEQ_IX];
+
+  send_msg_and_wait_res(tx_ack_msg, sizeof(tx_ack_msg));
+
+  uint32 txtimestamp = dwt_readtxtimestamplo32();
+  uint32 Da = txtimestamp - rxtimestamp;
+
+  if (!(status_reg & SYS_STATUS_RXFCG))
+  {
+    rx_error_reset();
+    return -1;
+  }
+
+  frame_len = len_rxdata();
+  if (frame_len != sizeof(rx_res_msg))
+  {
+    dwt_rxreset();
+    return -1;
+  }
+
+  dwt_readrxdata(rx_buffer, frame_len, 0);
+
+  if (memcmp(rx_buffer, rx_res_msg, MSG_COMMON_LEN) != 0)
+  {
+    dwt_rxreset();
+    return -1;
+  }
+
+  rxtimestamp = dwt_readrxtimestamplo32();
+  uint32 Ra = rxtimestamp - txtimestamp;
+
+  *(uint32*)(&tx_last_msg[MSG_DATA_DA_IX]) = Da;
+  *(uint32*)(&tx_last_msg[MSG_DATA_RA_IX]) = Ra;
+
+  send_msg_immediate(tx_last_msg, sizeof(tx_last_msg));
+
+
+  /* Retrieve poll reception timestamp. */
+  //poll_rx_ts = get_rx_timestamp_u64();
+
+  /* Response TX timestamp is the transmission time we programmed plus the antenna delay. */
+  //resp_tx_ts = (((uint64)(resp_tx_time & 0xFFFFFFFEUL)) << 8) + TX_ANT_DLY;
+
+  /* Write all timestamps in the final message. See NOTE 8 below. */
+  //resp_msg_set_ts(&tx_resp_msg[RESP_MSG_POLL_RX_TS_IDX], poll_rx_ts);
+  //resp_msg_set_ts(&tx_resp_msg[RESP_MSG_RESP_TX_TS_IDX], resp_tx_ts);
+
+  return 0;
+}
+
+void output_address()
+{
+  app_uart_put(THIS_ADDRESS_0);
+  app_uart_put(THIS_ADDRESS_1);
+  printf("");
+}
+
+void set_delay()
+{
+  uint8 delay[2];
+  int ix = 0;
+  while (ix < 2)
+  {
+    if (boUART_getc(&delay[ix]))
+    {
+      ix++;
+    }
+  }
+  dwt_setrxantennadelay(*(uint16*)delay);
+  dwt_settxantennadelay(*(uint16*)delay);
+}
+
+void try_tx()
+{
+  uint8 dest_address[2];
+  int ix = 0;
+  while (ix < 2)
+  {
+    if (boUART_getc(&dest_address[ix]))
+    {
+      ix++;
+    }
+  }
+  float ret = ds_init_run(dest_address);
+  output_uart((uint8*)&ret, 4);
+}
+
 
 /**@brief SS TWR Initiator task entry function.
 *
@@ -225,7 +361,7 @@ float ds_init_run(uint8 dest_address[2])
 void ss_initiator_task_function (void * pvParameter)
 {
   UNUSED_PARAMETER(pvParameter);
-  uint8 dest_address[2];
+  uint8 mode;
 
   //dwt_setrxtimeout(RESP_RX_TIMEOUT_UUS);
 
@@ -233,16 +369,24 @@ void ss_initiator_task_function (void * pvParameter)
 
   while (true)
   {
-    int ix = 0;
-    while (ix < 2)
+    if (boUART_getc(&mode))
     {
-      if (boUART_getc(&dest_address[ix]))
-      {
-        ix++;
+      switch (mode) {
+      case 0x01:
+        output_address();
+        break;
+      case 0x02:
+        set_delay();
+        break;
+      case 0x03:
+        try_tx();
+        break;
+      case 0x04:
+        ds_resp_run();
+        break;
       }
     }
-    float ret = ds_init_run(dest_address);
-    output_uart((uint8*)&ret, 4);
+
     /* Delay a task for a given number of ticks */
     //vTaskDelay(RNG_DELAY_MS);
     /* Tasks must be implemented to never return... */

@@ -57,8 +57,8 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="156" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../main.c" selected="0" top="122" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="215" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../ss_resp_main.c" selected="1" top="190" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="156" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../main.c" selected="0" top="137" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="29" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../ss_resp_main.c" selected="1" top="3" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="ds_twr_resp" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="nrf52832_xxaa" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/WorkArea/Repositories/dwm1001-keil-examples/nRF5_SDK_14.2.0/components/toolchain/ses" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>

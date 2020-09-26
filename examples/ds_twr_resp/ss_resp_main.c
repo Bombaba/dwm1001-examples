@@ -27,7 +27,7 @@
 #include "port_platform.h"
 
 #define THIS_ADDRESS_0 0x12
-#define THIS_ADDRESS_1 0x34
+#define THIS_ADDRESS_1 0x37
 
 /* Timestamps of frames transmission/reception.
 * As they are 40-bit wide, we need to define a 64-bit int type to handle them. */

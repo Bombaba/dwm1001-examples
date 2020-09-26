@@ -159,7 +159,6 @@ float ds_init_run(uint8 dest_address[2])
   send_msg_and_wait_res(tx_init_msg, sizeof(tx_init_msg));
 
   uint32 txtimestamp = dwt_readtxtimestamplo32();
-  uint32 rxtimestamp = dwt_readrxtimestamplo32();
 
   if (!(status_reg & SYS_STATUS_RXFCG))
   {
@@ -179,13 +178,14 @@ float ds_init_run(uint8 dest_address[2])
   {
     return 0;
   }
+  uint32 rxtimestamp = dwt_readrxtimestamplo32();
+  uint32 Rt = rxtimestamp - txtimestamp;
 
   // send Response message
   send_msg_and_wait_res(tx_res_msg, sizeof(tx_res_msg));
 
-  uint32 rt = rxtimestamp - txtimestamp;
   txtimestamp = dwt_readtxtimestamplo32();
-  uint32 dt = txtimestamp - rxtimestamp;
+  uint32 Dt = txtimestamp - rxtimestamp;
 
     if (!(status_reg & SYS_STATUS_RXFCG))
   {
@@ -207,16 +207,13 @@ float ds_init_run(uint8 dest_address[2])
   }
 
   double unit = 1.0 / (128 * 499.2 * 1e6);
-  double Da = *(uint32*)(&rx_buffer[MSG_DATA_DA_IX]) * unit;
-  double Ra = *(uint32*)(&rx_buffer[MSG_DATA_RA_IX]) * unit;
-  double Dt = dt * unit;
-  double Rt = rt * unit;
-  double time = (Ra * Rt - Da * Dt) / (Ra + Da + Rt + Dt);
+  double Da = *(uint32*)(&rx_buffer[MSG_DATA_DA_IX]);
+  double Ra = *(uint32*)(&rx_buffer[MSG_DATA_RA_IX]);
+  double time = (Ra * Rt - Da * Dt) * unit / (Ra + Da + Rt + Dt);
   double distance = time * SPEED_OF_LIGHT;
 
   return (float)distance;
 }
-
 
 /**@brief SS TWR Initiator task entry function.
 *

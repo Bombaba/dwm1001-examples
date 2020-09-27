@@ -16,7 +16,8 @@
 #define APP_NAME "DS TWR INIT v1.3"
 
 #define THIS_ADDRESS_0 0x89
-#define THIS_ADDRESS_1 0x13
+#define THIS_ADDRESS_1 0x12
+#define RX_TIMEOUT 1000
 
 /* Speed of light in air, in metres per second. */
 //#define SPEED_OF_LIGHT 299702547
@@ -211,10 +212,10 @@ float ds_init_run(uint8 dest_address[2])
     return 0;
   }
 
-  double unit = 1.0 / (128 * 499.2 * 1e6);
-  double Da = *(uint32*)(&rx_buffer[MSG_DATA_DA_IX]);
-  double Ra = *(uint32*)(&rx_buffer[MSG_DATA_RA_IX]);
-  double time = (Ra * Rt - Da * Dt) * unit / (Ra + Da + Rt + Dt);
+  double unit = 128 * 499.2 * 1e6;
+  uint64 Da = *(uint32*)(&rx_buffer[MSG_DATA_DA_IX]);
+  uint64 Ra = *(uint32*)(&rx_buffer[MSG_DATA_RA_IX]);
+  double time = (Ra * Rt - Da * Dt) / ((Ra + Da + Rt + Dt) * unit);
   double distance = time * SPEED_OF_LIGHT;
 
   return (float)distance;
@@ -230,7 +231,7 @@ int ds_resp_run()
   while (!((status_reg = dwt_read32bitreg(SYS_STATUS_ID)) & (SYS_STATUS_RXFCG | SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR)))
   {};
 
-  dwt_setrxtimeout(1000);
+  dwt_setrxtimeout(RX_TIMEOUT);
 
   if (!(status_reg & SYS_STATUS_RXFCG))
   {
@@ -347,6 +348,7 @@ void try_tx()
       ix++;
     }
   }
+  dwt_setrxtimeout(RX_TIMEOUT);
   float ret = ds_init_run(dest_address);
   output_uart((uint8*)&ret, 4);
 }
@@ -361,7 +363,7 @@ void ss_initiator_task_function (void * pvParameter)
   UNUSED_PARAMETER(pvParameter);
   uint8 mode;
 
-  //dwt_setrxtimeout(RESP_RX_TIMEOUT_UUS);
+  dwt_setrxaftertxdelay(0);
 
   dwt_setleds(DWT_LEDS_ENABLE);
 

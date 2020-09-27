@@ -28,6 +28,8 @@
 
 #define THIS_ADDRESS_0 0x12
 #define THIS_ADDRESS_1 0x37
+#define ANT_DELAY 16456
+#define RX_TIMEOUT 1000
 
 /* Timestamps of frames transmission/reception.
 * As they are 40-bit wide, we need to define a 64-bit int type to handle them. */
@@ -157,7 +159,7 @@ int ds_resp_run()
   while (!((status_reg = dwt_read32bitreg(SYS_STATUS_ID)) & (SYS_STATUS_RXFCG | SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR)))
   {};
 
-  dwt_setrxtimeout(1000);
+  dwt_setrxtimeout(RX_TIMEOUT);
 
   if (!(status_reg & SYS_STATUS_RXFCG))
   {
@@ -274,6 +276,11 @@ static uint64 get_rx_timestamp_u64(void)
 void ss_responder_task_function (void * pvParameter)
 {
   UNUSED_PARAMETER(pvParameter);
+
+  dwt_setrxantennadelay(ANT_DELAY);
+  dwt_settxantennadelay(ANT_DELAY);
+
+  dwt_setrxaftertxdelay(0);
 
   dwt_setleds(DWT_LEDS_ENABLE);
 

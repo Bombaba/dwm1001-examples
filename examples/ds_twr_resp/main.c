@@ -147,14 +147,14 @@ int main(void)
   dwt_configure(&config);
 
   /* Apply default antenna delay value. Defined in port platform.h */
-  dwt_setrxantennadelay(RX_ANT_DLY);
-  dwt_settxantennadelay(TX_ANT_DLY);
+  //dwt_setrxantennadelay(RX_ANT_DLY);
+  //dwt_settxantennadelay(TX_ANT_DLY);
 
   /* Set preamble timeout for expected frames.  */
   //dwt_setpreambledetecttimeout(PRE_TIMEOUT);
 
-  dwt_setrxtimeout(0);    // set to NO receive timeout for this simple example 
-  dwt_setrxaftertxdelay(0);  // in UWB microseconds
+  //dwt_setrxtimeout(0);    // set to NO receive timeout for this simple example 
+  //dwt_setrxaftertxdelay(0);  // in UWB microseconds
 
   //-------------dw1000  ini------end---------------------------	
 

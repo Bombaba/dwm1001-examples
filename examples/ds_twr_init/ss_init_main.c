@@ -17,6 +17,8 @@
 
 #define THIS_ADDRESS_0 0x89
 #define THIS_ADDRESS_1 0x12
+#define ANT_DELAY 16456
+#define RX_TIMEOUT 1000
 
 /* Speed of light in air, in metres per second. */
 //#define SPEED_OF_LIGHT 299702547
@@ -206,10 +208,10 @@ float ds_init_run(uint8 dest_address[2])
     return 0;
   }
 
-  double unit = 1.0 / (128 * 499.2 * 1e6);
-  double Da = *(uint32*)(&rx_buffer[MSG_DATA_DA_IX]);
-  double Ra = *(uint32*)(&rx_buffer[MSG_DATA_RA_IX]);
-  double time = (Ra * Rt - Da * Dt) * unit / (Ra + Da + Rt + Dt);
+  double unit = 128 * 499.2 * 1e6;
+  uint64 Da = *(uint32*)(&rx_buffer[MSG_DATA_DA_IX]);
+  uint64 Ra = *(uint32*)(&rx_buffer[MSG_DATA_RA_IX]);
+  double time = (Ra * Rt - Da * Dt) / ((Ra + Da + Rt + Dt) * unit);
   double distance = time * SPEED_OF_LIGHT;
 
   return (float)distance;
@@ -224,7 +226,11 @@ void ss_initiator_task_function (void * pvParameter)
   UNUSED_PARAMETER(pvParameter);
   uint8 dest_address[2];
 
-  //dwt_setrxtimeout(RESP_RX_TIMEOUT_UUS);
+  dwt_setrxantennadelay(ANT_DELAY);
+  dwt_settxantennadelay(ANT_DELAY);
+
+  dwt_setrxaftertxdelay(0);
+  dwt_setrxtimeout(RX_TIMEOUT);
 
   dwt_setleds(DWT_LEDS_ENABLE);
 

@@ -149,6 +149,34 @@ uint32 len_rxdata()
   return dwt_read32bitreg(RX_FINFO_ID) & RX_FINFO_RXFLEN_MASK;
 }
 
+static uint64 get_tx_timestamp_u64(void)
+{
+  uint8 ts_tab[5];
+  uint64 ts = 0;
+  int i;
+  dwt_readtxtimestamp(ts_tab);
+  for (i = 4; i >= 0; i--)
+  {
+    ts <<= 8;
+    ts |= ts_tab[i];
+  }
+  return ts;
+}
+
+static uint64 get_rx_timestamp_u64(void)
+{
+  uint8 ts_tab[5];
+  uint64 ts = 0;
+  int i;
+  dwt_readrxtimestamp(ts_tab);
+  for (i = 4; i >= 0; i--)
+  {
+    ts <<= 8;
+    ts |= ts_tab[i];
+  }
+  return ts;
+}
+
 int ds_resp_run()
 {
   // set to NO receive timeout 
@@ -159,7 +187,6 @@ int ds_resp_run()
   while (!((status_reg = dwt_read32bitreg(SYS_STATUS_ID)) & (SYS_STATUS_RXFCG | SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR)))
   {};
 
-  dwt_setrxtimeout(RX_TIMEOUT);
 
   if (!(status_reg & SYS_STATUS_RXFCG))
   {
@@ -184,7 +211,9 @@ int ds_resp_run()
     return -1;
   }
 
-  uint32 rxtimestamp = dwt_readrxtimestamplo32();
+  uint64 rxtimestamp = get_rx_timestamp_u64();
+
+  dwt_setrxtimeout(RX_TIMEOUT);
   
   tx_ack_msg[MSG_TO_ADDRESS_IX_0] = rx_buffer[MSG_FROM_ADDRESS_IX_0];
   tx_ack_msg[MSG_TO_ADDRESS_IX_1] = rx_buffer[MSG_FROM_ADDRESS_IX_1];
@@ -196,9 +225,6 @@ int ds_resp_run()
   tx_ack_msg[MSG_COMMON_SEQ_IX] = rx_res_msg[MSG_COMMON_SEQ_IX] = tx_last_msg[MSG_COMMON_SEQ_IX] = rx_buffer[MSG_COMMON_SEQ_IX];
 
   send_msg_and_wait_res(tx_ack_msg, sizeof(tx_ack_msg));
-
-  uint32 txtimestamp = dwt_readtxtimestamplo32();
-  uint32 Da = txtimestamp - rxtimestamp;
 
   if (!(status_reg & SYS_STATUS_RXFCG))
   {
@@ -221,14 +247,28 @@ int ds_resp_run()
     return -1;
   }
 
-  rxtimestamp = dwt_readrxtimestamplo32();
-  uint32 Ra = rxtimestamp - txtimestamp;
+  uint64 txtimestamp = get_tx_timestamp_u64();
 
-  *(uint32*)(&tx_last_msg[MSG_DATA_DA_IX]) = Da;
-  *(uint32*)(&tx_last_msg[MSG_DATA_RA_IX]) = Ra;
+  int64 Da = txtimestamp - rxtimestamp;
+  if (Da < 0)
+  {
+    dwt_rxreset();
+    return -1;
+  }
+
+  rxtimestamp = get_rx_timestamp_u64();
+
+  int64 Ra = rxtimestamp - txtimestamp;
+  if (Ra < 0)
+  {
+    dwt_rxreset();
+    return -1;
+  }
+
+  *(uint32*)(&tx_last_msg[MSG_DATA_DA_IX]) = (uint32)Da;
+  *(uint32*)(&tx_last_msg[MSG_DATA_RA_IX]) = (uint32)Ra;
 
   send_msg_immediate(tx_last_msg, sizeof(tx_last_msg));
-
 
   /* Retrieve poll reception timestamp. */
   //poll_rx_ts = get_rx_timestamp_u64();
@@ -242,32 +282,6 @@ int ds_resp_run()
 
   return 0;
 }
-
-
-/*! ------------------------------------------------------------------------------------------------------------------
-* @fn get_rx_timestamp_u64()
-*
-* @brief Get the RX time-stamp in a 64-bit variable.
-*        /!\ This function assumes that length of time-stamps is 40 bits, for both TX and RX!
-*
-* @param  none
-*
-* @return  64-bit value of the read time-stamp.
-*/
-static uint64 get_rx_timestamp_u64(void)
-{
-  uint8 ts_tab[5];
-  uint64 ts = 0;
-  int i;
-  dwt_readrxtimestamp(ts_tab);
-  for (i = 4; i >= 0; i--)
-  {
-    ts <<= 8;
-    ts |= ts_tab[i];
-  }
-  return ts;
-}
-
 
 /**@brief SS TWR Initiator task entry function.
 *

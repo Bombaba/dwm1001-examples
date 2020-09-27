@@ -57,6 +57,9 @@ static uint8 rx_buffer[RX_BUF_LEN];
 /* Hold copy of status register state here for reference so that it can be examined at a debug breakpoint. */
 static uint32 status_reg = 0;
 
+
+static double perunit = 128 * 499.2 * 1e6;
+
 void rx_error_reset()
 {
   /* Clear RX error/timeout events in the DW1000 status register. */
@@ -142,6 +145,34 @@ uint32 len_rxdata()
   return dwt_read32bitreg(RX_FINFO_ID) & RX_FINFO_RXFLEN_MASK;
 }
 
+static uint64 get_tx_timestamp_u64(void)
+{
+  uint8 ts_tab[5];
+  uint64 ts = 0;
+  int i;
+  dwt_readtxtimestamp(ts_tab);
+  for (i = 4; i >= 0; i--)
+  {
+    ts <<= 8;
+    ts |= ts_tab[i];
+  }
+  return ts;
+}
+
+static uint64 get_rx_timestamp_u64(void)
+{
+  uint8 ts_tab[5];
+  uint64 ts = 0;
+  int i;
+  dwt_readrxtimestamp(ts_tab);
+  for (i = 4; i >= 0; i--)
+  {
+    ts <<= 8;
+    ts |= ts_tab[i];
+  }
+  return ts;
+}
+
 float ds_init_run(uint8 dest_address[2])
 {
   tx_init_msg[MSG_TO_ADDRESS_IX_0] = dest_address[0];
@@ -159,8 +190,6 @@ float ds_init_run(uint8 dest_address[2])
 
   // send Initial Message
   send_msg_and_wait_res(tx_init_msg, sizeof(tx_init_msg));
-
-  uint32 txtimestamp = dwt_readtxtimestamplo32();
 
   if (!(status_reg & SYS_STATUS_RXFCG))
   {
@@ -180,16 +209,17 @@ float ds_init_run(uint8 dest_address[2])
   {
     return 0;
   }
-  uint32 rxtimestamp = dwt_readrxtimestamplo32();
-  uint32 Rt = rxtimestamp - txtimestamp;
+  
+  uint64 txtimestamp = get_tx_timestamp_u64();
+  uint64 rxtimestamp = get_rx_timestamp_u64();
+
+  int64 Rt = rxtimestamp - txtimestamp;
+  if (Rt < 0) return 0;
 
   // send Response message
   send_msg_and_wait_res(tx_res_msg, sizeof(tx_res_msg));
 
-  txtimestamp = dwt_readtxtimestamplo32();
-  uint32 Dt = txtimestamp - rxtimestamp;
-
-    if (!(status_reg & SYS_STATUS_RXFCG))
+  if (!(status_reg & SYS_STATUS_RXFCG))
   {
     rx_error_reset();
     return 0;
@@ -208,10 +238,17 @@ float ds_init_run(uint8 dest_address[2])
     return 0;
   }
 
-  double unit = 128 * 499.2 * 1e6;
-  uint64 Da = *(uint32*)(&rx_buffer[MSG_DATA_DA_IX]);
-  uint64 Ra = *(uint32*)(&rx_buffer[MSG_DATA_RA_IX]);
-  double time = (Ra * Rt - Da * Dt) / ((Ra + Da + Rt + Dt) * unit);
+  txtimestamp = get_tx_timestamp_u64();
+  //txtimestamp = dwt_readtxtimestamphi32();
+  //txtimestamp <<= 32;
+  //txtimestamp += dwt_readtxtimestamplo32();
+
+  int64 Dt = txtimestamp - rxtimestamp;
+  if (Dt < 0) return 0;
+
+  double Da = *(uint32*)(&rx_buffer[MSG_DATA_DA_IX]);
+  double Ra = *(uint32*)(&rx_buffer[MSG_DATA_RA_IX]);
+  double time = (Ra * Rt - Da * Dt) / ((Ra + Da + Rt + Dt) * perunit);
   double distance = time * SPEED_OF_LIGHT;
 
   return (float)distance;
